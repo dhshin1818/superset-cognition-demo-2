@@ -4327,6 +4327,34 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
             role.name for role in self.get_user_roles()
         ]
 
+    def _apply_auth_rate_limits(self) -> None:
+        """Apply rate limiting to authentication endpoints.
+
+        Rate-limits the HTML login view and the REST API login endpoint
+        (/api/v1/security/login) using the AUTH_RATE_LIMIT config value.
+        """
+        if not self.is_auth_limited:
+            return
+
+        # HTML login view
+        if getattr(self.auth_view, "blueprint", None) is not None:
+            self.limiter.limit(self.auth_rate_limit, methods=["POST"])(
+                self.auth_view.blueprint
+            )
+
+        # REST API login endpoint
+        from flask_appbuilder.security.api import SecurityApi
+
+        for view in self.appbuilder.baseviews:
+            if (
+                isinstance(view, SecurityApi)
+                and getattr(view, "blueprint", None) is not None
+            ):
+                self.limiter.limit(self.auth_rate_limit, methods=["POST"])(
+                    view.blueprint
+                )
+                break
+
     # temporal change to remove the roles view from the security menu,
     # after migrating all views to frontend, we will set FAB_ADD_SECURITY_VIEWS = False
     def register_views(self) -> None:
@@ -4339,30 +4367,19 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
                 SupersetRegisterUserView
             )
 
-        # Apply rate limiting to auth view if enabled
-        # This needs to be done after the view is added, otherwise the blueprint
-        # is not initialized. Only apply if blueprint exists.
-        # We also need to prevent the parent's register_views from trying to
-        # apply rate limiting again (since auth_view already exists), so we
-        # temporarily disable AUTH_RATE_LIMITED during the super() call.
-        if (
-            self.is_auth_limited
-            and getattr(self.auth_view, "blueprint", None) is not None
-        ):
-            self.limiter.limit(self.auth_rate_limit, methods=["POST"])(
-                self.auth_view.blueprint
-            )
-
-        # Temporarily disable AUTH_RATE_LIMITED to prevent parent from trying to
-        # apply rate limiting to a potentially None blueprint
+        # Temporarily disable AUTH_RATE_LIMITED to prevent the parent's
+        # register_views from trying to apply rate limiting to a potentially
+        # None blueprint; we handle rate limiting ourselves after all views
+        # are registered.
         original_auth_rate_limited = current_app.config["AUTH_RATE_LIMITED"]
         current_app.config["AUTH_RATE_LIMITED"] = False
 
         try:
             super().register_views()
         finally:
-            # Restore original value even if an exception occurs
             current_app.config["AUTH_RATE_LIMITED"] = original_auth_rate_limited
+
+        self._apply_auth_rate_limits()
 
         for view in list(self.appbuilder.baseviews):
             if isinstance(view, self.rolemodelview.__class__) and getattr(
