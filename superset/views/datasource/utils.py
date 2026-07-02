@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Iterable, Optional, TYPE_CHECKING
+from typing import Any, Iterable, TYPE_CHECKING
 
 from flask import current_app as app
 
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def get_limit_clause(page: Optional[int], per_page: Optional[int]) -> dict[str, int]:
+def get_limit_clause(page: int | None, per_page: int | None) -> dict[str, int]:
     samples_row_limit = app.config.get("SAMPLES_ROW_LIMIT", 1000)
     limit = samples_row_limit
     offset = 0

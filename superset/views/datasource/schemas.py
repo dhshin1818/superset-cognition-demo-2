@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from typing import Any, Optional, TypedDict
+from typing import Any, TypedDict
 
 from flask import current_app as app
 from marshmallow import fields, post_load, pre_load, Schema, validate
@@ -26,11 +26,11 @@ from superset.utils.core import DatasourceType
 class ExternalMetadataParams(TypedDict):
     datasource_type: str
     database_name: str
-    catalog_name: Optional[str]
+    catalog_name: str | None
     schema_name: str
     table_name: str
-    normalize_columns: Optional[bool]
-    always_filter_main_dttm: Optional[bool]
+    normalize_columns: bool | None
+    always_filter_main_dttm: bool | None
 
 
 get_external_metadata_schema = {

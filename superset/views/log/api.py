@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from typing import Any, Optional
+from typing import Any
 
 from flask import current_app as app
 from flask_appbuilder.api import expose, protect, rison as parse_rison, safe
@@ -95,7 +95,7 @@ class LogRestApi(LogMixin, BaseSupersetModelRestApi):
             return self.response_404()
         return None
 
-    def get_user_activity_access_error(self, user_id: int) -> Optional[FlaskResponse]:
+    def get_user_activity_access_error(self, user_id: int) -> FlaskResponse | None:
         try:
             security_manager.raise_for_user_activity_access(user_id)
         except SupersetSecurityException as ex:

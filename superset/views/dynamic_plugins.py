@@ -14,8 +14,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from typing import Optional
-
 from flask import make_response, Response
 from flask_appbuilder import ModelView
 from flask_appbuilder.hooks import before_request
@@ -61,7 +59,7 @@ class DynamicPluginsView(ModelView):
     edit_title = _("Edit Plugin")
 
     @before_request
-    def ensure_dynamic_plugins_enabled(self) -> Optional[Response]:
+    def ensure_dynamic_plugins_enabled(self) -> Response | None:
         if not is_feature_enabled("DYNAMIC_PLUGINS"):
             return make_response("Not found", 404)
         return None

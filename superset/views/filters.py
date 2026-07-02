@@ -16,7 +16,7 @@
 # under the License.
 import logging
 from datetime import datetime
-from typing import Any, cast, ClassVar, Optional
+from typing import Any, cast, ClassVar
 
 from flask import current_app as app, g
 from flask_appbuilder.models.filters import BaseFilter
@@ -44,7 +44,7 @@ class FilterRelatedOwners(BaseFilter):  # pylint: disable=too-few-public-methods
     name = lazy_gettext("Owner")
     arg_name = "owners"
 
-    def apply(self, query: Query, value: Optional[Any]) -> Query:
+    def apply(self, query: Query, value: Any | None) -> Query:
         user_model = security_manager.user_model
         like_value = "%" + cast(str, value) + "%"
         return query.filter(
@@ -72,7 +72,7 @@ class BaseFilterRelatedUsers(BaseFilter):  # pylint: disable=too-few-public-meth
     name = lazy_gettext("username")
     arg_name = "username"
 
-    def apply(self, query: Query, value: Optional[Any]) -> Query:
+    def apply(self, query: Query, value: Any | None) -> Query:
         if extra_filters := app.config["EXTRA_RELATED_QUERY_FILTERS"].get(
             "user",
         ):
@@ -98,7 +98,7 @@ class BaseFilterRelatedRoles(BaseFilter):  # pylint: disable=too-few-public-meth
     name = lazy_gettext("role")
     arg_name = "role"
 
-    def apply(self, query: Query, value: Optional[Any]) -> Query:
+    def apply(self, query: Query, value: Any | None) -> Query:
         if extra_filters := app.config["EXTRA_RELATED_QUERY_FILTERS"].get(
             "role",
         ):
@@ -119,7 +119,7 @@ class FilterRelatedTables(BaseFilter):  # pylint: disable=too-few-public-methods
     name = lazy_gettext("Table")
     arg_name = "tables"
 
-    def apply(self, query: Query, value: Optional[Any]) -> Query:
+    def apply(self, query: Query, value: Any | None) -> Query:
         from superset.connectors.sqla.models import SqlaTable
 
         like_value = "%" + cast(str, value) + "%"
