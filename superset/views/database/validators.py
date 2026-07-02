@@ -15,8 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Optional
-
 from flask_babel import lazy_gettext as _
 from marshmallow import ValidationError
 
@@ -48,7 +46,7 @@ def sqlalchemy_uri_validator(
         ) from ex
 
 
-def schema_allows_file_upload(database: Database, schema: Optional[str]) -> bool:
+def schema_allows_file_upload(database: Database, schema: str | None) -> bool:
     if not database.allow_file_upload:
         return False
     if schemas := database.get_schema_access_for_file_upload():

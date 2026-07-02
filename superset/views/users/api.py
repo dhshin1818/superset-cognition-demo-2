@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from flask import current_app as app, g, redirect, request, Response
 from flask_appbuilder.api import expose, permission_name, safe
@@ -46,7 +46,7 @@ class CurrentUserRestApi(BaseSupersetApi):
 
     current_user_put_schema = CurrentUserPutSchema()
 
-    def pre_update(self, item: User, data: Dict[str, Any]) -> None:
+    def pre_update(self, item: User, data: dict[str, Any]) -> None:
         item.changed_on = datetime.now()
         item.changed_by_fk = g.user.id
         if "password" in data and data["password"]:

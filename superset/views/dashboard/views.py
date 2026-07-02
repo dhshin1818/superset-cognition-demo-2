@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 import builtins
-from typing import Callable, Union
+from typing import Callable
 
 from flask import g, redirect, Response, url_for
 from flask_appbuilder import expose
@@ -61,7 +61,7 @@ class DashboardModelView(DashboardMixin, SupersetModelView, DeleteMixin):  # pyl
     @action("mulexport", __("Export"), __("Export dashboards?"), "fa-database")
     def mulexport(
         self,
-        items: Union["DashboardModelView", builtins.list["DashboardModelView"]],
+        items: "DashboardModelView" | builtins.list["DashboardModelView"],
     ) -> FlaskResponse:
         if not isinstance(items, list):
             items = [items]
