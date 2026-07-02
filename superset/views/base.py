@@ -133,6 +133,15 @@ logger = logging.getLogger(__name__)
 
 
 def get_error_msg() -> str:
+    """Retrieve an error message for the current exception context.
+
+    Returns the full traceback if SHOW_STACKTRACE is enabled in the app
+    configuration, otherwise returns a generic fatal error message.
+
+    Returns:
+        str: The error message string, either a full traceback or a
+            generic message indicating that stacktraces are hidden.
+    """
     if app.config.get("SHOW_STACKTRACE"):
         error_msg = traceback.format_exc()
     else:
@@ -145,12 +154,33 @@ def get_error_msg() -> str:
 
 
 def json_success(json_msg: str, status: int = 200) -> FlaskResponse:
+    """Create a successful JSON HTTP response.
+
+    Args:
+        json_msg: The JSON-encoded string to include in the response body.
+        status: The HTTP status code for the response.
+
+    Returns:
+        FlaskResponse: A Flask Response object with JSON content type.
+    """
     return Response(
         json_msg, status=status, content_type="application/json; charset=utf-8"
     )
 
 
 def data_payload_response(payload_json: str, has_error: bool = False) -> FlaskResponse:
+    """Create a JSON response for a data payload.
+
+    Wraps the payload in a JSON success response, using HTTP 400 if an
+    error is indicated, otherwise HTTP 200.
+
+    Args:
+        payload_json: The JSON-encoded payload string.
+        has_error: Whether the payload represents an error condition.
+
+    Returns:
+        FlaskResponse: A Flask Response with the appropriate status code.
+    """
     status = 400 if has_error else 200
     return json_success(payload_json, status=status)
 
@@ -158,6 +188,19 @@ def data_payload_response(payload_json: str, has_error: bool = False) -> FlaskRe
 def generate_download_headers(
     extension: str, filename: str | None = None
 ) -> dict[str, Any]:
+    """Generate HTTP headers for a file download response.
+
+    Produces a Content-Disposition header configured for attachment
+    download. If no filename is provided, a timestamp-based name is used.
+
+    Args:
+        extension: The file extension (e.g., "csv", "xlsx").
+        filename: Optional base filename without extension. Defaults to a
+            timestamp in the format YYYYMMDD_HHMMSS.
+
+    Returns:
+        dict[str, Any]: A dictionary of HTTP headers for the download.
+    """
     filename = filename if filename else datetime.now().strftime("%Y%m%d_%H%M%S")
     content_disp = f"attachment; filename={filename}.{extension}"
     headers = {"Content-Disposition": content_disp}
@@ -217,6 +260,15 @@ def api(f: Callable[..., FlaskResponse]) -> Callable[..., FlaskResponse]:
 class BaseSupersetView(BaseView):
     @staticmethod
     def json_response(obj: Any, status: int = 200) -> FlaskResponse:
+        """Serialize an object to a JSON HTTP response.
+
+        Args:
+            obj: The object to serialize as JSON.
+            status: The HTTP status code for the response.
+
+        Returns:
+            FlaskResponse: A Flask Response with JSON content type.
+        """
         return Response(
             json.dumps(obj, default=json.json_int_dttm_ser, ignore_nan=True),
             status=status,
@@ -250,6 +302,16 @@ class BaseSupersetView(BaseView):
 
 
 def get_environment_tag() -> dict[str, Any]:
+    """Retrieve the environment tag configuration for the UI.
+
+    Determines the environment label (e.g., "debug", "staging") based on
+    the ENVIRONMENT_TAG_CONFIG setting and the corresponding environment
+    variable. Falls back to "debug" when Flask debug mode is active.
+
+    Returns:
+        dict[str, Any]: A dictionary with environment tag display
+            properties, or an empty dict if no tag applies.
+    """
     # Whether flask is in debug mode (--debug)
     debug = app.config["DEBUG"]
 
@@ -274,6 +336,19 @@ def get_environment_tag() -> dict[str, Any]:
 
 
 def menu_data(user: User) -> dict[str, Any]:
+    """Build the navigation menu payload for the frontend.
+
+    Assembles menu items, brand configuration, environment tag, and
+    navbar metadata including language picker, user info, and version
+    details.
+
+    Args:
+        user: The Flask-AppBuilder User instance for the current session.
+
+    Returns:
+        dict[str, Any]: A dictionary containing menu structure, brand
+            settings, environment tag, and navbar configuration.
+    """
     languages = {
         lang: {**appbuilder.languages[lang], "url": appbuilder.get_url_for_locale(lang)}
         for lang in appbuilder.languages
@@ -567,6 +642,14 @@ def cached_common_bootstrap_data(  # pylint: disable=unused-argument
 
 
 def common_bootstrap_payload() -> dict[str, Any]:
+    """Generate the common bootstrap data payload for the frontend.
+
+    Resolves the user locale and delegates to the cached bootstrap
+    data function, keyed on user ID and locale string.
+
+    Returns:
+        dict[str, Any]: The cached common bootstrap data dictionary.
+    """
     locale = get_locale()
     # Convert locale to string for proper cache key hashing
     locale_str = str(locale) if locale else None
